@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多策略路径规划可视化系统</title>
+  <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <i class="bi bi-diagram-3-fill"></i>
+        <div>
+          <h1 data-i18n="brandTitle">多策略路径规划可视化</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <select id="langSelect" class="form-select form-select-sm lang-select" data-i18n-title="langSelectTitle" title="Language">
+          <option value="en" selected>English</option>
+          <option value="zh">简体中文</option>
+        </select>
+        <select id="presetMapSelect" class="form-select form-select-sm" data-i18n-title="presetMapTitle" title="加载预设地图">
+          <option value="" data-i18n="presetMapPlaceholder">选择预设地图...</option>
+        </select>
+        <button id="btnHelp" class="btn btn-outline-light btn-help" data-bs-toggle="modal" data-bs-target="#helpModal">
+          <i class="bi bi-question-circle"></i> <span data-i18n="help">帮助</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <aside class="panel panel-left">
+        <section class="panel-section">
+          <h2><i class="bi bi-brush"></i> <span data-i18n="sectionEditTools">编辑工具</span></h2>
+          <div class="tool-group" role="group">
+            <button class="tool-btn active" data-tool="wall" data-i18n-title="toolWallTitle" title="左键绘制障碍">
+              <i class="bi bi-square-fill"></i><span data-i18n="toolWall">障碍</span>
+            </button>
+            <button class="tool-btn" data-tool="erase" data-i18n-title="toolEraseTitle" title="左键填充空地（清除障碍）">
+              <i class="bi bi-eraser-fill"></i><span data-i18n="toolErase">填充</span>
+            </button>
+            <button class="tool-btn" data-tool="start" data-i18n-title="toolStartTitle" title="左键放置起点">
+              <i class="bi bi-geo-fill"></i><span data-i18n="toolStart">起点</span>
+            </button>
+            <button class="tool-btn" data-tool="goal" data-i18n-title="toolGoalTitle" title="左键放置终点">
+              <i class="bi bi-flag-fill"></i><span data-i18n="toolGoal">终点</span>
+            </button>
+          </div>
+          <p class="hint" data-i18n="editHint">左键应用工具 · 右键快速填充 · 拖拽连续编辑 · Ctrl+Z/Y 撤销</p>
+          <div class="undo-redo-row">
+            <button id="btnUndo" class="btn btn-sm btn-outline-light" disabled data-i18n-title="undoTitle" title="撤销 (Ctrl+Z)">
+              <i class="bi bi-arrow-counterclockwise"></i> <span data-i18n="undo">撤销</span>
+            </button>
+            <button id="btnRedo" class="btn btn-sm btn-outline-light" disabled data-i18n-title="redoTitle" title="重做 (Ctrl+Y)">
+              <i class="bi bi-arrow-clockwise"></i> <span data-i18n="redo">重做</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h2><i class="bi bi-grid-3x3"></i> <span data-i18n="sectionMapSize">地图尺寸</span></h2>
+          <p class="hint" data-i18n="mapSizeHint">自定义行/列（5~80），大地图自动缩小格子</p>
+          <div class="size-presets">
+            <button class="btn btn-sm btn-outline-secondary preset-size" data-rows="10" data-cols="10">10×10</button>
+            <button class="btn btn-sm btn-outline-secondary preset-size" data-rows="15" data-cols="21">15×21</button>
+            <button class="btn btn-sm btn-outline-secondary preset-size" data-rows="20" data-cols="20">20×20</button>
+            <button class="btn btn-sm btn-outline-secondary preset-size" data-rows="30" data-cols="30">30×30</button>
+            <button class="btn btn-sm btn-outline-secondary preset-size" data-rows="50" data-cols="50">50×50</button>
+          </div>
+          <div class="row g-2 mt-2">
+            <div class="col-6">
+              <label class="form-label" data-i18n="labelRows">行</label>
+              <input id="mapRows" type="number" class="form-control form-control-sm" min="5" max="80" value="15">
+            </div>
+            <div class="col-6">
+              <label class="form-label" data-i18n="labelCols">列</label>
+              <input id="mapCols" type="number" class="form-control form-control-sm" min="5" max="80" value="21">
+            </div>
+          </div>
+          <button id="btnResize" class="btn btn-secondary btn-sm w-100 mt-2 map-apply-btn" data-i18n-title="btnApplyTitle" title="应用自定义尺寸"><span data-i18n="btnApply">应用</span></button>
+        </section>
+
+        <section class="panel-section">
+          <h2><i class="bi bi-stars"></i> <span data-i18n="sectionMapGen">地图生成</span></h2>
+          <div class="d-grid gap-2">
+            <button id="btnGenMaze" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-shuffle"></i> <span data-i18n="btnGenMaze">生成迷宫</span>
+            </button>
+            <button id="btnGenScatter" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-bricks"></i> <span data-i18n="btnGenScatter">随机散点障碍</span>
+            </button>
+            <button id="btnClear" class="btn btn-outline-warning btn-sm">
+              <i class="bi bi-trash"></i> <span data-i18n="btnClear">清空地图</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h2><i class="bi bi-save"></i> <span data-i18n="sectionSaveMap">保存地图</span></h2>
+          <div class="input-group input-group-sm">
+            <input id="saveFilename" type="text" class="form-control" placeholder="my_map.txt" value="custom_map.txt">
+            <button id="btnSaveMap" class="btn btn-success"><span data-i18n="btnSave">保存</span></button>
+          </div>
+        </section>
+      </aside>
+
+      <main class="panel panel-center">
+        <div class="canvas-toolbar">
+          <div class="legend">
+            <span><i class="cell-demo start"></i><span data-i18n="legendStart">起点</span></span>
+            <span><i class="cell-demo goal"></i><span data-i18n="legendGoal">终点</span></span>
+            <span><i class="cell-demo wall"></i><span data-i18n="legendWall">障碍</span></span>
+            <span><i class="cell-demo visited"></i><span data-i18n="legendVisited">已访问</span></span>
+            <span><i class="cell-demo path"></i><span data-i18n="legendPath">路径</span></span>
+          </div>
+          <div id="toastHost" class="toast-host"></div>
+        </div>
+        <div id="gridWrapper" class="grid-wrapper">
+          <div id="gridBoard" class="grid-board" data-i18n-aria="gridAriaLabel" aria-label="路径规划地图"></div>
+        </div>
+        <footer class="status-bar">
+          <span id="statusTool">当前工具：障碍</span>
+          <span id="statusCoord" data-i18n="coordDash">坐标：-</span>
+          <span id="statusMap">地图：15 × 21</span>
+        </footer>
+      </main>
+
+      <aside class="panel panel-right">
+        <section class="panel-section">
+          <h2><i class="bi bi-cpu"></i> <span data-i18n="sectionAlgorithm">寻路算法</span></h2>
+          <select id="algorithmSelect" class="form-select mb-2"></select>
+          <p id="algorithmDesc" class="hint"></p>
+          <div class="d-grid gap-2">
+            <button id="btnRun" class="btn btn-primary">
+              <i class="bi bi-play-fill"></i> <span data-i18n="btnRun">运行寻路</span>
+            </button>
+            <div class="compare-dropdown">
+              <button id="btnCompareToggle" class="btn btn-outline-info w-100" type="button">
+                <i class="bi bi-bar-chart-steps"></i> <span data-i18n="btnCompare">算法对比 ▾</span>
+              </button>
+              <div id="comparePanel" class="compare-panel d-none">
+                <div class="compare-panel-head">
+                  <label class="compare-select-all">
+                    <input type="checkbox" id="compareSelectAll" checked> <span data-i18n="selectAll">全选</span>
+                  </label>
+                </div>
+                <div id="compareAlgoList" class="compare-algo-list"></div>
+                <button id="btnCompareRun" class="btn btn-info btn-sm w-100 mt-2">
+                  <i class="bi bi-play-circle"></i> <span data-i18n="btnCompareRun">对比选中算法</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h2><i class="bi bi-film"></i> <span data-i18n="sectionAnimation">搜索动画</span></h2>
+          <div class="animation-controls">
+            <button id="btnPlay" class="btn btn-sm btn-light" disabled><i class="bi bi-play-fill"></i></button>
+            <button id="btnPause" class="btn btn-sm btn-light" disabled><i class="bi bi-pause-fill"></i></button>
+            <button id="btnResetAnim" class="btn btn-sm btn-light" disabled><i class="bi bi-skip-start-fill"></i></button>
+            <input id="animSlider" type="range" class="form-range" min="0" max="0" value="0" disabled>
+          </div>
+          <div class="d-flex justify-content-between small text-secondary">
+            <span id="animStepLabel" data-i18n="stepZero">步骤 0 / 0</span>
+            <span id="animCurrentLabel" data-i18n="currentNodeDash">当前节点：-</span>
+          </div>
+          <div class="d-flex justify-content-end small text-secondary mt-1">
+            <label class="speed-label"><span data-i18n="speed">速度</span>
+              <select id="animSpeed" class="form-select form-select-sm d-inline-block w-auto">
+                <option value="80" data-i18n="speedFast">快</option>
+                <option value="150" selected data-i18n="speedMedium">中</option>
+                <option value="300" data-i18n="speedSlow">慢</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h2><i class="bi bi-clipboard-data"></i> <span data-i18n="sectionResults">运行结果</span></h2>
+          <div id="statsPanel" class="stats-panel empty-state">
+            点击「运行寻路」或「算法对比」查看结果
+          </div>
+        </section>
+
+        <section class="panel-section compare-section d-none" id="compareSection">
+          <h2><i class="bi bi-graph-up"></i> <span data-i18n="sectionCompare">性能对比</span></h2>
+          <canvas id="compareChart" height="180"></canvas>
+          <div id="comparePlaybackList" class="compare-playback-list"></div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title" data-i18n="helpTitle">操作说明</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <ul>
+            <li data-i18n-html="help1"><strong>编辑</strong>：先选工具，再左键编辑；右键任意位置可快速擦除。</li>
+            <li data-i18n-html="help2"><strong>运行寻路</strong>：选算法后点主按钮，或按 <kbd>Enter</kbd>。</li>
+            <li data-i18n-html="help3"><strong>随机散点障碍</strong>：在当前地图上随机添加障碍，不重置地图。</li>
+            <li data-i18n-html="help4"><strong>算法对比</strong>：勾选算法对比后，点击下方各算法即可播放寻路动画。</li>
+            <li data-i18n-html="help5"><strong>填充</strong>：左键或右键将格子变为空地，可快速修正误画的障碍。</li>
+            <li data-i18n-html="help6"><strong>快捷键</strong>：1障碍 2填充 3起点 4终点 · Enter 运行 · Esc 停动画</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/chart.umd.min.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
